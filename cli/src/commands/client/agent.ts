@@ -35,7 +35,7 @@ interface CreatedAgentKey {
 }
 
 interface SkillsInstallSummary {
-  tool: "codex" | "claude";
+  tool: "codex" | "claude" | "copilot";
   target: string;
   linked: string[];
   removed: string[];
@@ -57,10 +57,22 @@ function claudeSkillsHome(): string {
   return path.join(base, "skills");
 }
 
+function copilotSkillsHome(): string {
+  return path.join(os.homedir(), ".github-copilot", "skills");
+}
+
+async function resolvePaperclipSkillsDir(): Promise<string | null> {
+  for (const candidate of PAPERCLIP_SKILLS_CANDIDATES) {
+    const isDir = await fs.stat(candidate).then((s) => s.isDirectory()).catch(() => false);
+    if (isDir) return candidate;
+  }
+  return null;
+}
+
 async function installSkillsForTarget(
   sourceSkillsDir: string,
   targetSkillsDir: string,
-  tool: "codex" | "claude",
+  tool: "codex" | "claude" | "copilot",
 ): Promise<SkillsInstallSummary> {
   const summary: SkillsInstallSummary = {
     tool,
@@ -258,6 +270,7 @@ export function registerAgentCommands(program: Command): void {
             installSummaries.push(
               await installSkillsForTarget(skillsDir, codexSkillsHome(), "codex"),
               await installSkillsForTarget(skillsDir, claudeSkillsHome(), "claude"),
+              await installSkillsForTarget(skillsDir, copilotSkillsHome(), "copilot"),
             );
           }
 

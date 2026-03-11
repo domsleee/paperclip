@@ -61,6 +61,7 @@ type AdapterType =
   | "opencode_local"
   | "pi_local"
   | "cursor"
+  | "copilot_cli"
   | "process"
   | "http"
   | "openclaw_gateway";
@@ -178,7 +179,9 @@ export function OnboardingWizard() {
     adapterType === "codex_local" ||
     adapterType === "gemini_local" ||
     adapterType === "opencode_local" ||
-    adapterType === "cursor";
+    adapterType === "pi_local" ||
+    adapterType === "cursor" ||
+    adapterType === "copilot_cli";
   const effectiveAdapterCommand =
     command.trim() ||
     (adapterType === "codex_local"
@@ -189,6 +192,8 @@ export function OnboardingWizard() {
       ? "agent"
       : adapterType === "opencode_local"
       ? "opencode"
+      : adapterType === "copilot_cli"
+      ? "gh"
       : "claude");
 
   useEffect(() => {
@@ -787,6 +792,12 @@ export function OnboardingWizard() {
                             desc: "Invoke OpenClaw via gateway protocol",
                             comingSoon: true,
                             disabledLabel: "Configure OpenClaw within the App"
+                          },
+                          {
+                            value: "copilot_cli" as const,
+                            label: "GitHub Copilot",
+                            icon: Bot,
+                            desc: "Local GitHub Copilot agent"
                           }
                         ].map((opt) => (
                           <button
@@ -841,7 +852,8 @@ export function OnboardingWizard() {
                     adapterType === "gemini_local" ||
                     adapterType === "opencode_local" ||
                     adapterType === "pi_local" ||
-                    adapterType === "cursor") && (
+                    adapterType === "cursor" ||
+                    adapterType === "copilot_cli") && (
                     <div className="space-y-3">
                       <div>
                         <div className="flex items-center gap-1.5 mb-1">
@@ -1036,6 +1048,8 @@ export function OnboardingWizard() {
                                 ? `${effectiveAdapterCommand} --output-format json "Respond with hello."`
                               : adapterType === "opencode_local"
                                 ? `${effectiveAdapterCommand} run --format json "Respond with hello."`
+                              : adapterType === "copilot_cli"
+                                ? `${effectiveAdapterCommand} copilot --help`
                               : `${effectiveAdapterCommand} --print - --output-format stream-json --verbose`}
                           </p>
                           <p className="text-muted-foreground">
@@ -1045,7 +1059,8 @@ export function OnboardingWizard() {
                           {adapterType === "cursor" ||
                           adapterType === "codex_local" ||
                           adapterType === "gemini_local" ||
-                          adapterType === "opencode_local" ? (
+                          adapterType === "opencode_local" ||
+                          adapterType === "copilot_cli" ? (
                             <p className="text-muted-foreground">
                               If auth fails, set{" "}
                               <span className="font-mono">
@@ -1053,6 +1068,8 @@ export function OnboardingWizard() {
                                   ? "CURSOR_API_KEY"
                                   : adapterType === "gemini_local"
                                     ? "GEMINI_API_KEY"
+                                  : adapterType === "copilot_cli"
+                                    ? "GITHUB_TOKEN"
                                     : "OPENAI_API_KEY"}
                               </span>{" "}
                               in env or run{" "}
@@ -1063,6 +1080,8 @@ export function OnboardingWizard() {
                                     ? "codex login"
                                     : adapterType === "gemini_local"
                                       ? "gemini auth"
+                                    : adapterType === "copilot_cli"
+                                      ? "gh auth login"
                                       : "opencode auth login"}
                               </span>
                               .
